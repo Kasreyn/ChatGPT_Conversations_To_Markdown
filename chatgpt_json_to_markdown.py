@@ -54,6 +54,12 @@ def process_conversations(data, output_dir, config):
 
         # Safely get the title and mapping
         title = entry.get("title", None)
+        create_time = entry.get("create_time", None)
+        if isinstance(create_time, str):
+            create_time_str = datetime.fromisoformat(create_time).strftime(config['date_format'])
+        else:
+            create_time_str = datetime.fromtimestamp(create_time).strftime(config['date_format'])
+
         mapping = entry.get("mapping", {})
 
         # Extract messages from the "mapping" key
@@ -67,7 +73,9 @@ def process_conversations(data, output_dir, config):
         messages.sort(key=lambda x: x.get("create_time") or float('-inf'))
 
         # Use the first message to infer the title if it's not available
-        inferred_title = _get_title(title, messages[0] if messages else {"content": {"text": "Untitled"}})
+        title = _get_title(title, messages[0] if messages else {"content": {"text": "Untitled"}})
+#        create_time = messages[0].get("create_time")
+        inferred_title = create_time_str + title
 
         # Sanitize the title to ensure it's a valid filename
         sanitized_title = ''.join(c for c in inferred_title if c.isalnum() or c in [' ', '_']).rstrip()
