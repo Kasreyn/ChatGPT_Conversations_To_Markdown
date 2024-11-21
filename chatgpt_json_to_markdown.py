@@ -90,8 +90,10 @@ def process_conversations(data, output_dir, config):
                 author_role = message["author"]["role"]
                 content = _get_message_content(message)
                 author_name = config['user_name'] if author_role == "user" else config['assistant_name']
+                date = message.get("create_time")
+                message_date = datetime.fromtimestamp(date if isinstance(date, float) else 0.0).strftime('%Y-%m-%d %-I:%M %p')
                 if not config['skip_empty_messages'] or content.strip():
-                    f.write(f"**{author_name}**: {content}{config['message_separator']}")
+                    f.write(f"{message_date} - **{author_name}**:  \n{content}{config['message_separator']}")
 
 def main():
     config_path = "config.json"
