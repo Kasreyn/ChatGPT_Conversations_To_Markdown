@@ -27,6 +27,10 @@ def _get_message_content(message):
         content = message["content"]["text"]
     elif "result" in message["content"]:
         content = message["content"]["result"]
+    elif message["content"]:
+        content = "thoughts"
+#    elif message["content_type"]:
+#        content = "reasoning_recap"
     else:
         raise ValueError(f"Unknown message format: {message['content']}")
     
