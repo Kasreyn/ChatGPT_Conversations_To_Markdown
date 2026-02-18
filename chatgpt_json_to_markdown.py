@@ -62,6 +62,8 @@ def process_conversations(data, output_dir, config):
         if isinstance(create_time, str):
             create_time_str = datetime.fromisoformat(create_time).strftime(config['date_format'])
         else:
+            # create_time = 1695296015.904057
+            print(f"create_time: {create_time}")
             create_time_str = datetime.fromtimestamp(create_time).strftime(config['date_format'])
 
         mapping = entry.get("mapping", {})
