@@ -358,8 +358,13 @@ def process_conversations(data, output_dir, config, input_base_path):
         # Sort messages by their create_time, handling None values
         messages.sort(key=lambda x: x.get("create_time") or float('-inf'))
 
+        if isinstance(create_time, str):
+            create_time_str = datetime.fromisoformat(create_time).strftime(config['date_format'])
+        else:
+            create_time_str = datetime.fromtimestamp(create_time).strftime(config['date_format'])
+
         # Use the first message to infer the title if it's not available
-        inferred_title = _get_title(title, messages[0] if messages else None)
+        inferred_title = create_time_str + _get_title(title, messages[0] if messages else None)
 
         # Sanitize the title to ensure it's a valid filename
         sanitized_title = ''.join(c for c in inferred_title if c.isalnum() or c in [' ', '_', '-']).rstrip()
@@ -406,10 +411,12 @@ def process_conversations(data, output_dir, config, input_base_path):
                     file_path
                 )
                 author_name = _get_author_name(message, config)
+                date = message.get("create_time")
+                message_date = datetime.fromtimestamp(date if isinstance(date, float) else 0.0).strftime('%Y-%m-%d %-I:%M %p')
 
                 if not config.get('skip_empty_messages', True) or content.strip():
                     # Write author and content
-                    f.write(f"**{author_name}**:\n\n{content}{config['message_separator']}")
+                    f.write(f"{message_date} - **{author_name}**:\n\n{content}{config['message_separator']}")
 
 def main():
     config_path = Path("config.json")
