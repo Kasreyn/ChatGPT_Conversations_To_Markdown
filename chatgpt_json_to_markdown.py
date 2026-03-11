@@ -361,7 +361,10 @@ def process_conversations(data, output_dir, config, input_base_path):
         if isinstance(create_time, str):
             create_time_str = datetime.fromisoformat(create_time).strftime(config['date_format'])
         else:
-            create_time_str = datetime.fromtimestamp(create_time).strftime(config['date_format'])
+            if create_time is None:
+                create_time_str = "1970 01 01 "
+            else:
+                create_time_str = datetime.fromtimestamp(create_time).strftime(config['date_format'])
 
         # Use the first message to infer the title if it's not available
         inferred_title = create_time_str + _get_title(title, messages[0] if messages else None)
@@ -437,19 +440,22 @@ def main():
     # Determine the base path for finding attachments
     if config['input_mode'] == 'directory':
         input_base_path = input_path
-        conversations_file = input_path / 'conversations.json'
+        # pattern for numbered JSON archives
+        numbered_files = sorted(input_path.glob('conversations-*.json'))
 
-        if conversations_file.exists():
-            data = read_json_file(conversations_file)
+        if not numbered_files:
+            conversations_file = input_path / 'conversations.json'
+            if conversations_file.exists():
+                numbered_files = [conversations_file]
+            else:
+                print(f"❌ Error: No conversation JSON files found in {input_path}")
+                sys.exit(1)
+
+        # read & process each file in order
+        for json_file in numbered_files:
+            print(f"Processing {json_file} …")
+            data = read_json_file(json_file)
             process_conversations(data, str(output_dir), config, str(input_base_path))
-        else:
-            print(f"❌ Error: conversations.json not found in {input_path}")
-            sys.exit(1)
-    else:
-        # Single file mode - assume input_path is the conversations.json
-        input_base_path = input_path.parent
-        data = read_json_file(input_path)
-        process_conversations(data, str(output_dir), config, str(input_base_path))
 
     print(f"\n✅ All Done! You can access your files here: {output_dir}")
     print(f"📁 Created markdown files with embedded images and audio.")
